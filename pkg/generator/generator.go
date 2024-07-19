@@ -78,7 +78,6 @@ func (g *Generator) recreate() *Generator {
 
 func (g *Generator) sep(sep Sequence) time.Duration {
 	if s, ok := g.customSeparatorMap[sep]; ok {
-		fmt.Println(s)
 		return time.Duration(s)
 	}
 
