@@ -9,6 +9,27 @@ import (
 	"github.com/ebitengine/oto/v3"
 )
 
+type Sequence byte
+
+const (
+	Dit Sequence = iota
+	Dash
+	InterElement
+	InterCharacter
+	InterWord
+)
+
+// map in sequence:units
+func defaultSeparatorsMap() map[Sequence]byte {
+	return map[Sequence]byte{
+		Dit:            1,
+		Dash:           3,
+		InterElement:   1,
+		InterCharacter: 3,
+		InterWord:      7,
+	}
+}
+
 const (
 	DefaultFrequency    = 784.0 // this is G
 	DefaultSampleRate   = 48000
@@ -18,9 +39,10 @@ const (
 )
 
 type Generator struct {
-	ctx          *oto.Context
-	dit, dash    *oto.Player
-	UnitDuration time.Duration
+	ctx                *oto.Context
+	dit, dash          *oto.Player
+	UnitDuration       time.Duration
+	customSeparatorMap map[Sequence]byte
 }
 
 func NewGenerator() (*Generator, error) {
@@ -47,10 +69,28 @@ func NewGenerator() (*Generator, error) {
 }
 
 func (g *Generator) recreate() *Generator {
-	ditSW := NewSineWave(DefaultFrequency, 1*g.UnitDuration, DefaultChannelCount, DefaultFormat)
-	dashSW := NewSineWave(DefaultFrequency, 3*g.UnitDuration, DefaultChannelCount, DefaultFormat)
+	ditSW := NewSineWave(DefaultFrequency, g.sep(Dit)*g.UnitDuration, DefaultChannelCount, DefaultFormat)
+	dashSW := NewSineWave(DefaultFrequency, g.sep(Dash)*g.UnitDuration, DefaultChannelCount, DefaultFormat)
 	g.dit = g.ctx.NewPlayer(ditSW)
 	g.dash = g.ctx.NewPlayer(dashSW)
+	return g
+}
+
+func (g *Generator) sep(sep Sequence) time.Duration {
+	if s, ok := g.customSeparatorMap[sep]; ok {
+		fmt.Println(s)
+		return time.Duration(s)
+	}
+
+	return time.Duration(defaultSeparatorsMap()[sep])
+}
+
+func (g *Generator) SetCustomSeparator(sep Sequence, durationInUnits int) *Generator {
+	if g.customSeparatorMap == nil {
+		g.customSeparatorMap = make(map[Sequence]byte)
+	}
+
+	g.customSeparatorMap[sep] = byte(durationInUnits)
 	return g
 }
 
@@ -68,7 +108,7 @@ func (g *Generator) Dit() {
 	}
 
 	g.dit.Play()
-	time.Sleep(g.UnitDuration)
+	time.Sleep(g.sep(Dit) * g.UnitDuration)
 }
 
 func (g *Generator) Dash() {
@@ -78,13 +118,13 @@ func (g *Generator) Dash() {
 	}
 
 	g.dash.Play()
-	time.Sleep(3 * g.UnitDuration)
+	time.Sleep(g.sep(Dash) * g.UnitDuration)
 }
 
 func (g *Generator) Play(text string) {
 	for _, c := range text {
 		if c == ' ' {
-			time.Sleep(7 * g.UnitDuration)
+			time.Sleep(g.sep(InterWord) * g.UnitDuration)
 			continue
 		}
 
@@ -96,7 +136,7 @@ func (g *Generator) Play(text string) {
 		g.PlayMorseSequence(moreSequence + "/")
 	}
 
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(time.Millisecond)
 }
 
 func (g *Generator) PlayMorseSequence(sequence string) {
@@ -107,9 +147,10 @@ func (g *Generator) PlayMorseSequence(sequence string) {
 		case '-':
 			g.Dash()
 		case '/':
-			time.Sleep(2 * g.UnitDuration)
+			time.Sleep((g.sep(InterCharacter) - g.sep(InterElement)) * g.UnitDuration)
 		}
-		time.Sleep(g.UnitDuration)
+
+		time.Sleep(g.sep(InterElement) * g.UnitDuration)
 	}
 }
 
