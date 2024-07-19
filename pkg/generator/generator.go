@@ -62,7 +62,7 @@ func (g *Generator) SetPARIS(paris int) *Generator {
 }
 
 func (g *Generator) Dit() {
-	newPos, err := g.dash.Seek(0, io.SeekStart)
+	newPos, err := g.dit.Seek(0, io.SeekStart)
 	if err != nil || newPos != 0 {
 		panic(fmt.Sprintf("failed to seek: %v", err))
 	}
@@ -93,7 +93,7 @@ func (g *Generator) Play(text string) {
 			panic(fmt.Sprintf("invalid character: %c", c))
 		}
 
-		g.PlayMorseSequence(moreSequence)
+		g.PlayMorseSequence(moreSequence + "/")
 	}
 
 	time.Sleep(1 * time.Millisecond)
@@ -104,7 +104,6 @@ func (g *Generator) PlayMorseSequence(sequence string) {
 		switch c {
 		case '.':
 			g.Dit()
-			fmt.Println("dit")
 		case '-':
 			g.Dash()
 		case '/':
@@ -116,7 +115,32 @@ func (g *Generator) PlayMorseSequence(sequence string) {
 
 func TranslateMorse(c rune) (string, bool) {
 	dict := map[rune]string{
+		'a': ".-",
+		'b': "-...",
+		'c': "-.-.",
+		'd': "-..",
+		'e': ".",
+		'f': "..-.",
+		'g': "--.",
+		'h': "....",
+		'i': "..",
+		'j': ".---",
+		'k': "-.-",
+		'l': ".-..",
+		'm': "--",
+		'n': "-.",
+		'o': "---",
+		'p': ".--.",
+		'q': "--.-",
+		'r': ".-.",
+		's': "...",
+		't': "-",
+		'u': "..-",
 		'v': "...-",
+		'w': ".--",
+		'x': "-..-",
+		'y': "-.--",
+		'z': "--..",
 	}
 
 	if result, ok := dict[c]; ok {
