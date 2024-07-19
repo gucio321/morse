@@ -14,10 +14,13 @@ const (
 	DefaultSampleRate   = 48000
 	DefaultFormat       = oto.FormatSignedInt16LE
 	DefaultChannelCount = 2
+	DefaultPARIS        = 20
 )
 
 type Generator struct {
-	ctx *oto.Context
+	ctx          *oto.Context
+	dit, dash    *oto.Player
+	UnitDuration time.Duration
 }
 
 func NewGenerator() (*Generator, error) {
@@ -34,16 +37,74 @@ func NewGenerator() (*Generator, error) {
 
 	<-ready
 
-	return &Generator{
+	result := &Generator{
 		ctx: ctx,
-	}, nil
+	}
+
+	result.SetPARIS(DefaultPARIS)
+
+	return result, nil
 }
 
-func (g *Generator) Play() {
-	sw := NewSineWave(DefaultFrequency, 1*time.Second, DefaultChannelCount, DefaultFormat)
-	player := g.ctx.NewPlayer(sw)
-	player.Play()
-	time.Sleep(1 * time.Second)
+func (g *Generator) recreate() *Generator {
+	ditSW := NewSineWave(DefaultFrequency, 1*g.UnitDuration, DefaultChannelCount, DefaultFormat)
+	dashSW := NewSineWave(DefaultFrequency, 3*g.UnitDuration, DefaultChannelCount, DefaultFormat)
+	g.dit = g.ctx.NewPlayer(ditSW)
+	g.dash = g.ctx.NewPlayer(dashSW)
+	return g
+}
+
+func (g *Generator) SetPARIS(paris int) *Generator {
+	// "PARIS " = 50 units, unitDuration in seconds is 60/(50*PARIS)
+	g.UnitDuration = time.Duration(60*time.Second) / time.Duration(50*paris)
+	g.recreate()
+	return g
+}
+
+func (g *Generator) Dit() {
+	g.dit.Play()
+	time.Sleep(g.UnitDuration)
+}
+
+func (g *Generator) Dash() {
+	g.dash.Play()
+	time.Sleep(3 * g.UnitDuration)
+}
+
+func (g *Generator) Play(text string) {
+	for _, c := range text {
+		if c == ' ' {
+			time.Sleep(7 * g.UnitDuration)
+			continue
+		}
+
+		moreSequence, valid := TranslateMorse(c)
+		if !valid {
+			panic(fmt.Sprintf("invalid character: %c", c))
+		}
+
+		g.PlayMorseSequence(moreSequence)
+	}
+
+	time.Sleep(1 * time.Millisecond)
+}
+
+func (g *Generator) PlayMorseSequence(sequence string) {
+	for _, c := range sequence {
+		switch c {
+		case '.':
+			g.Dit()
+		case '-':
+			g.Dash()
+		case '/':
+			time.Sleep(2 * g.UnitDuration)
+		}
+		time.Sleep(g.UnitDuration)
+	}
+}
+
+func TranslateMorse(c rune) (string, bool) {
+	panic("not implemented")
 }
 
 type SineWave struct {

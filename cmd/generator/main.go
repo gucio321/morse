@@ -1,6 +1,10 @@
 package main
 
-import "github.com/gucio32/morse/pkg/generator"
+import (
+	"time"
+
+	"github.com/gucio32/morse/pkg/generator"
+)
 
 func main() {
 	g, err := generator.NewGenerator()
@@ -9,5 +13,7 @@ func main() {
 	}
 
 	_ = g
-	g.Play()
+	// g.SetPARIS(10)
+	g.Play("vvv")
+	time.Sleep(1 * time.Second)
 }
