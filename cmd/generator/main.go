@@ -13,7 +13,7 @@ func main() {
 	}
 
 	_ = g
-	// g.SetPARIS(10)
+	g.SetPARIS(1)
 	g.Play("vvv")
 	time.Sleep(1 * time.Second)
 }

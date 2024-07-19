@@ -62,11 +62,21 @@ func (g *Generator) SetPARIS(paris int) *Generator {
 }
 
 func (g *Generator) Dit() {
+	newPos, err := g.dash.Seek(0, io.SeekStart)
+	if err != nil || newPos != 0 {
+		panic(fmt.Sprintf("failed to seek: %v", err))
+	}
+
 	g.dit.Play()
 	time.Sleep(g.UnitDuration)
 }
 
 func (g *Generator) Dash() {
+	newPos, err := g.dash.Seek(0, io.SeekStart)
+	if err != nil || newPos != 0 {
+		panic(fmt.Sprintf("failed to seek: %v", err))
+	}
+
 	g.dash.Play()
 	time.Sleep(3 * g.UnitDuration)
 }
@@ -94,6 +104,7 @@ func (g *Generator) PlayMorseSequence(sequence string) {
 		switch c {
 		case '.':
 			g.Dit()
+			fmt.Println("dit")
 		case '-':
 			g.Dash()
 		case '/':
@@ -104,7 +115,15 @@ func (g *Generator) PlayMorseSequence(sequence string) {
 }
 
 func TranslateMorse(c rune) (string, bool) {
-	panic("not implemented")
+	dict := map[rune]string{
+		'v': "...-",
+	}
+
+	if result, ok := dict[c]; ok {
+		return result, true
+	}
+
+	return "", false
 }
 
 type SineWave struct {
@@ -201,7 +220,22 @@ func (s *SineWave) Read(buf []byte) (int, error) {
 	if eof {
 		return n, io.EOF
 	}
+
 	return n, nil
+}
+
+func (s *SineWave) Seek(offset int64, whence int) (int64, error) {
+	switch whence {
+	case io.SeekStart:
+		s.pos = offset
+	case io.SeekCurrent:
+		s.pos += offset
+	case io.SeekEnd:
+		s.pos = s.length + offset
+	}
+
+	s.remaining = nil
+	return s.pos, nil
 }
 
 func formatByteLength(format oto.Format) int {
