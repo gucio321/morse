@@ -69,8 +69,8 @@ func NewGenerator() (*Generator, error) {
 }
 
 func (g *Generator) recreate() *Generator {
-	ditSW := NewSineWave(DefaultFrequency, g.sep(Dit)*g.UnitDuration, DefaultChannelCount, DefaultFormat)
-	dashSW := NewSineWave(DefaultFrequency, g.sep(Dash)*g.UnitDuration, DefaultChannelCount, DefaultFormat)
+	ditSW := NewSineWave(DefaultFrequency, g.sep(Dit)*g.UnitDuration, DefaultChannelCount)
+	dashSW := NewSineWave(DefaultFrequency, g.sep(Dash)*g.UnitDuration, DefaultChannelCount)
 	g.dit = g.ctx.NewPlayer(ditSW)
 	g.dash = g.ctx.NewPlayer(dashSW)
 	return g
@@ -201,14 +201,13 @@ type SineWave struct {
 	remaining []byte
 }
 
-func NewSineWave(freq float64, duration time.Duration, channelCount int, format oto.Format) *SineWave {
+func NewSineWave(freq float64, duration time.Duration, channelCount int) *SineWave {
 	l := int64(DefaultChannelCount) * int64(formatByteLength()) * int64(DefaultSampleRate) * int64(duration) / int64(time.Second)
 	l = l / 4 * 4
 	return &SineWave{
 		freq:         freq,
 		length:       l,
 		channelCount: channelCount,
-		format:       format,
 	}
 }
 
