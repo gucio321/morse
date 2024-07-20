@@ -211,7 +211,7 @@ func NewSineWave(freq float64, duration time.Duration, channelCount int) *SineWa
 	}
 }
 
-const stuckReduction = 500
+const stuckReduction = 300
 
 func (s *SineWave) Read(buf []byte) (int, error) {
 	if len(s.remaining) > 0 {
@@ -246,7 +246,12 @@ func (s *SineWave) Read(buf []byte) (int, error) {
 		b := int16(math.Sin(2*math.Pi*float64(p)/length) * 0.3 * max)
 
 		if p <= stuckReduction {
-			b = int16(float64(p) / (math.Pi / 2 * stuckReduction) * math.Sin(2*math.Pi*float64(p)/length) * 0.3 * max)
+			b = int16(float64(p) / (stuckReduction) * math.Sin(2*math.Pi*float64(p)/length) * 0.3 * max)
+		}
+
+		l := len(buf) / num
+		if int64(p) >= int64(l)-stuckReduction {
+			b = int16((float64(l) - float64(p)) / (stuckReduction) * math.Sin(2*math.Pi*float64(p)/length) * 0.3 * max)
 		}
 
 		for ch := 0; ch < DefaultChannelCount; ch++ {
