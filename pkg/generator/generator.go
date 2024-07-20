@@ -124,7 +124,7 @@ func (g *Generator) Dash() {
 func (g *Generator) Play(text string) {
 	for _, c := range text {
 		if c == ' ' {
-			time.Sleep(g.sep(InterWord) * g.UnitDuration)
+			time.Sleep((g.sep(InterWord) - g.sep(InterCharacter)) * g.UnitDuration)
 			continue
 		}
 
