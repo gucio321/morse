@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/ebitengine/oto/v3"
@@ -34,7 +35,7 @@ const (
 	DefaultFrequency    = 784.0 // this is G
 	DefaultSampleRate   = 48000
 	DefaultFormat       = oto.FormatSignedInt16LE
-	DefaultChannelCount = 2
+	DefaultChannelCount = 1
 	DefaultPARIS        = 20
 )
 
@@ -199,6 +200,8 @@ type SineWave struct {
 	format       oto.Format
 
 	remaining []byte
+
+	m *sync.Mutex
 }
 
 func NewSineWave(freq float64, duration time.Duration, channelCount int) *SineWave {
@@ -208,12 +211,15 @@ func NewSineWave(freq float64, duration time.Duration, channelCount int) *SineWa
 		freq:         freq,
 		length:       l,
 		channelCount: channelCount,
+		m:            &sync.Mutex{},
 	}
 }
 
 const stuckReduction = 300
 
 func (s *SineWave) Read(buf []byte) (int, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
 	if len(s.remaining) > 0 {
 		n := copy(buf, s.remaining)
 		copy(s.remaining, s.remaining[n:])
