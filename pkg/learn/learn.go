@@ -15,17 +15,17 @@ import (
 // According to https://morsecode.world/international/timing.html
 // it is recommended to work on PARIS=20 and increase InterChar and InterWord breaks
 type Lesson struct {
-	Letters   []rune
+	Letters   string
 	InterChar int
 	InterWord int
 }
 
 func GetLesson(lessonIdx int) Lesson {
 	m := map[int]Lesson{
-		1: {[]rune{'a', 'e', 'l', 'v'}, 9, 21},
-		2: {[]rune{'a', 'e', 'l', 'v'}, 6, 14},
-		3: {[]rune{'a', 'e', 'l', 'v', 'c', 'q', 's', 't'}, 9, 21},
-		4: {[]rune{'a', 'e', 'l', 'v', 'c', 'q', 's', 't'}, 6, 14},
+		1: {"aelv", 9, 21},
+		2: {"aelv", 6, 14},
+		3: {"aelvcqst", 9, 21},
+		4: {"aelvcqst", 6, 14},
 	}
 
 	l, ok := m[lessonIdx]
