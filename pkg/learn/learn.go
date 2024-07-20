@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gucio32/morse/pkg/generator"
 	"golang.org/x/exp/rand"
@@ -36,6 +37,9 @@ func GetLesson(lessonIdx int) Lesson {
 }
 
 func StartLesson(l Lesson, nWords int) {
+	// 0 initialize random (unix timestamp)
+	rand.Seed(uint64(time.Now().UnixNano()))
+
 	// 1.0 generate nWords 5-letters words from l.Letters
 	words := []string{}
 	for i := 0; i < nWords; i++ {
