@@ -61,7 +61,7 @@ func Tutorial(lesson Lesson) {
 		// check if onnly 1 letters
 		if len(answer) != 1 {
 			fmt.Println("Only one letter allowed")
-			ncontinue
+			continue
 		}
 
 		// check if letter is in lesson
